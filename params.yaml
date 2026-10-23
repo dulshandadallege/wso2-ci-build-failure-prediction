@@ -16,3 +16,10 @@ collect:
       workflow: pull-request.yml
     - repo: ballerina-platform/module-ballerinax-kafka
       workflow: pull-request.yml
+
+train:
+  seed: 42
+  train_size: 0.70
+  val_size: 0.15
+  cv_splits: 4
+  n_iter: 25
