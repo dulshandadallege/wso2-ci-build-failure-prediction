@@ -4,6 +4,7 @@
 *.pem
 *.key
 secrets/
+.streamlit/secrets.toml
 
 data/raw/
 data/cache/
