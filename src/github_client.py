@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -39,6 +40,7 @@ class GitHub:
         self.cache.mkdir(parents=True, exist_ok=True)
         self.min_remaining = min_remaining
         self.calls = 0
+        self.lock = threading.Lock()
 
     def _cache_path(self, url, params):
         key = url + "?" + json.dumps(params or {}, sort_keys=True)
@@ -74,6 +76,10 @@ class GitHub:
         return data
 
     def _wait(self, r):
+        with self.lock:
+            self._sleep(r)
+
+    def _sleep(self, r):
         if r.headers.get("Retry-After"):
             delay = int(r.headers["Retry-After"]) + 1
         else:

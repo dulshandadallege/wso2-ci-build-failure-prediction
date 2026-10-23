@@ -1,4 +1,5 @@
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import calendar
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -119,6 +120,7 @@ def run_row(run, repo, salt):
         "run_attempt": run.get("run_attempt"),
         "event": run.get("event"),
         "head_branch_hash": hash_id(run.get("head_branch") or "", salt),
+        "pr_key": hash_id(f"{head_repo}:{run.get('head_branch') or ''}", salt),
         "head_sha": run.get("head_sha"),
         "is_fork": int(bool(head_repo) and head_repo.lower() != repo.lower()),
         "actor_hash": hash_id(actor, salt),
@@ -136,15 +138,19 @@ def collect_repo(gh, item, cfg, salt, out_dir):
     repo, workflow = item["repo"], item["workflow"]
     print(f"[{repo}] listing runs", flush=True)
     runs = list_runs(gh, repo, workflow, cfg["months_back"], cfg["max_runs_per_repo"], set(cfg["conclusions"]))
-    rows = []
-    for i, run in enumerate(runs, 1):
+    def enrich(run):
         row = run_row(run, repo, salt)
         row.update(commit_features(gh, repo, run["head_sha"]))
         if run.get("event") in ("pull_request", "pull_request_target"):
             row.update(pr_features(gh, repo, run["head_sha"]))
-        rows.append(row)
-        if i % 100 == 0:
-            print(f"  [{repo}] {i}/{len(runs)} enriched, api calls={gh.calls}", flush=True)
+        return row
+
+    rows = []
+    with ThreadPoolExecutor(max_workers=cfg.get("workers", 6)) as pool:
+        for i, row in enumerate(pool.map(enrich, runs), 1):
+            rows.append(row)
+            if i % 100 == 0:
+                print(f"  [{repo}] {i}/{len(runs)} enriched, api calls={gh.calls}", flush=True)
     df = pd.DataFrame(rows)
     out = out_dir / (repo.replace("/", "__") + ".csv")
     df.to_csv(out, index=False)

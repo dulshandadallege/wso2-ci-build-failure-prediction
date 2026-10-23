@@ -1,6 +1,7 @@
 collect:
   months_back: 24
   max_runs_per_repo: 700
+  workers: 6
   conclusions: [success, failure]
   repos:
     - repo: wso2/carbon-identity-framework
