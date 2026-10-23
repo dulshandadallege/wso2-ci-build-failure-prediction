@@ -86,6 +86,7 @@ row = {
     "repo": repo, "event": "pull_request", "author_association": association,
 }
 X = pd.DataFrame([row])[NUMERIC + BINARY + CATEGORICAL]
+X[NUMERIC + BINARY] = X[NUMERIC + BINARY].astype(float)
 p = float(bundle["model"].predict_proba(X)[0, 1])
 risky = p >= bundle["threshold"]
 
