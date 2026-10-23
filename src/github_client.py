@@ -41,6 +41,7 @@ class GitHub:
         self.min_remaining = min_remaining
         self.calls = 0
         self.lock = threading.Lock()
+        self.resume_at = 0.0
 
     def _cache_path(self, url, params):
         key = url + "?" + json.dumps(params or {}, sort_keys=True)
@@ -77,15 +78,17 @@ class GitHub:
 
     def _wait(self, r):
         with self.lock:
-            self._sleep(r)
-
-    def _sleep(self, r):
-        if r.headers.get("Retry-After"):
-            delay = int(r.headers["Retry-After"]) + 1
-        else:
-            delay = max(int(r.headers.get("X-RateLimit-Reset", time.time() + 60)) - time.time(), 0) + 5
-        print(f"rate limited, sleeping {int(delay)}s", flush=True)
-        time.sleep(delay)
+            now = time.time()
+            if now >= self.resume_at:
+                if r.headers.get("Retry-After"):
+                    delay = int(r.headers["Retry-After"]) + 1
+                else:
+                    reset = int(r.headers.get("X-RateLimit-Reset", now + 60))
+                    delay = max(reset - now, 0) + 5
+                self.resume_at = now + delay
+                print(f"rate limited, sleeping {int(delay)}s", flush=True)
+            delay = self.resume_at - now
+        time.sleep(max(delay, 0))
 
     def _throttle(self, r):
         remaining = int(r.headers.get("X-RateLimit-Remaining", 1000))
