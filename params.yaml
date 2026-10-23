@@ -1,0 +1,17 @@
+collect:
+  months_back: 24
+  max_runs_per_repo: 700
+  conclusions: [success, failure]
+  repos:
+    - repo: wso2/carbon-identity-framework
+      workflow: pr-builder.yml
+    - repo: wso2/identity-apps
+      workflow: pr-builder.yml
+    - repo: wso2/carbon-apimgt
+      workflow: main.yml
+    - repo: ballerina-platform/module-ballerina-http
+      workflow: pull-request.yml
+    - repo: ballerina-platform/module-ballerina-grpc
+      workflow: pull-request.yml
+    - repo: ballerina-platform/module-ballerinax-kafka
+      workflow: pull-request.yml
