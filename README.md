@@ -1,9 +1,6 @@
 # CI Build Failure Prediction
 
 Predicts whether a GitHub Actions pull-request build will fail, at the moment it starts. The model is trained on real CI history from public WSO2 and Ballerina repositories, a Sri Lankan open-source ecosystem.
-
-IT5514 Applied Machine Learning – final assignment, 269091G Dadallege D.
-
 ## Results
 
 Time-ordered split: train on the oldest 70% of runs, validate on the next 15%, test on the newest 15% (30 Sep – 23 Oct 2026).
@@ -14,7 +11,7 @@ Time-ordered split: train on the oldest 70% of runs, validate on the next 15%, t
 | Logistic regression | 0.67 | 0.49 | 0.49 | 0.71 |
 | Random forest | 0.68 | 0.46 | 0.55 | 0.90 |
 | **LightGBM (selected)** | **0.70** | **0.51** | **0.53** | **0.68** |
-| XGBoost | 0.69 | 0.50 | 0.47 | 0.48 |
+| XGBoost | 0.69 | 0.48 | 0.51 | 0.58 |
 
 The strongest drivers, from SHAP, are whether the previous run on the same PR failed, the author's past failure rate and experience, the repository, and the size of the change.
 
