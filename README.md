@@ -1,8 +1,19 @@
 # CI Build Failure Prediction
 
+[![CI](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/actions/workflows/ci.yml)
+[![Release](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/actions/workflows/release.yml/badge.svg)](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/dulshandadallege/wso2-ci-build-failure-prediction?label=model)](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/releases/latest)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Streamlit app](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://wso2-ci-failure-predictor.streamlit.app)
+[![Container](https://img.shields.io/badge/container-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/pkgs/container/wso2-ci-build-failure-prediction)
+
 Predicts whether a GitHub Actions pull-request build will fail, at the moment it starts. The model is trained on real CI history from public WSO2 and Ballerina repositories, a Sri Lankan open-source ecosystem.
 
 **Live app:** https://wso2-ci-failure-predictor.streamlit.app
+
+## Why this project
+
+I work as a DevOps engineer, and failed CI builds are part of daily life: a pull request goes red, someone waits for the pipeline, reruns it, or digs through logs to find out whether it was their change, a flaky test or the runner. This project treats that as a real-world prediction problem. It learns from the actual build history of WSO2 and Ballerina, platforms I work with, which builds are likely to fail before they finish, and explains why, so a team can act early instead of waiting.
 
 ## Results
 
@@ -68,7 +79,35 @@ docker build -t ci-failure-app .
 docker run -p 8501:8501 ci-failure-app
 ```
 
-## MLOps pipeline
+## How the pipeline works
+
+```mermaid
+flowchart LR
+    A[GitHub REST API<br/>WSO2 + Ballerina runs] --> B[src.collect<br/>collect + hash IDs]
+    B --> C[(data/dataset<br/>ci_runs.csv)]
+    P[params.yaml] --> D
+    C --> D[src.features<br/>leakage-free features]
+    D --> E[src.train<br/>4 models, time split]
+    P --> E
+    E --> F{quality gate<br/>ROC-AUC, PR-AUC}
+    F -- fail --> G[CI fails<br/>no release]
+    F -- pass --> H[model.joblib<br/>+ metrics.json]
+    H --> I[GitHub Release<br/>model registry]
+    H --> J[Docker image<br/>ghcr.io]
+    I --> K[Streamlit app<br/>loads latest model]
+    E --> L[src.explain<br/>SHAP figures]
+```
+
+| Stage | What happens | Where |
+|---|---|---|
+| Push or pull request → CI | ruff lint → unit, leakage and privacy tests → train → **quality gate** → Docker build + health check | `.github/workflows/ci.yml` |
+| Change `VERSION` on `main` → Release | full retrain → **quality gate** → SHAP figures → GitHub Release `v<version>` (model, `metrics.json`, result tables) → image `ghcr.io/dulshandadallege/wso2-ci-build-failure-prediction:{version, latest}` | `.github/workflows/release.yml` |
+| New model version | bump the number in `VERSION` and push; the release is created once per version and the app picks it up | `VERSION` |
+| New CI history | run `python -m src.collect` with a token, refresh `data/dataset/ci_runs.csv`, then bump `VERSION` | `src/collect.py` |
+| App start | the Streamlit app downloads `model.joblib` and `metrics.json` from the latest release | `app/app.py` |
+| Every change | 15 tests check that history features ignore unfinished runs, that no raw usernames or branch names are stored, and that the model still clears the gate | `tests/` |
+
+## MLOps diagrams
 
 ![MLOps architecture](reports/figures/mlops_architecture.png)
 
