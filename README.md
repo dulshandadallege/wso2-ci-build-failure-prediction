@@ -72,6 +72,8 @@ docker run -p 8501:8501 ci-failure-app
 | `ci.yml` | every push and pull request | ruff lint, 15 unit tests and the model quality gate; retrains the model and fails if test ROC-AUC drops below 0.62 or PR-AUC isn't at least 1.3× the baseline; builds the Docker image and checks the app's health endpoint |
 | `release.yml` | change to `VERSION` on `main` | tests, full retraining and quality gate, SHAP figures, a GitHub Release holding the model and its metrics, and a container image pushed to GitHub Container Registry |
 
+Each release is retrained on GitHub's runners and lists its own test metrics. They differ very slightly from the notebook (for v1.0.0: ROC-AUC 0.69, PR-AUC 0.52), because LightGBM's floating-point results vary a little between processors.
+
 The Streamlit app downloads `model.joblib` and `metrics.json` from the latest release on first start, so the deployed app always serves the most recent model that passed the gate. Set `MODEL_RELEASE_URL` to point it at another release.
 
 To publish a new model version, bump the number in `VERSION` (for example `1.1.0`) and push to `main`. The workflow creates the `v1.1.0` release and image; it skips versions that already have a release.
