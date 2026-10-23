@@ -17,3 +17,11 @@ python -m src.collect --repo wso2/identity-apps --limit 50
 ```
 
 Only run metadata and commit statistics are collected. Actor and branch names are stored as salted hashes. Raw data and API cache stay local and are not committed.
+
+## Training and explanation
+
+```bash
+python -m src.train      # time-based split, tuned models, saves models/model.joblib
+python -m src.explain    # SHAP plots in reports/figures
+streamlit run app/app.py
+```
