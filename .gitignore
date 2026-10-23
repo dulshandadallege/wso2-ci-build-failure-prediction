@@ -39,3 +39,8 @@ venv/
 *.pptx
 *.mp4
 *.mov
+
+submission/
+*.m4a
+*.wav
+*.mp3
