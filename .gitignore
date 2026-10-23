@@ -10,11 +10,13 @@ data/raw/
 data/cache/
 data/processed/
 *.csv
+!data/dataset/ci_runs.csv
 *.parquet
 *.db
 *.sqlite
 
 models/*.pkl
+reports/metrics.json
 models/*.joblib
 mlruns/
 
@@ -31,3 +33,9 @@ venv/
 .vscode/
 .idea/
 *.log
+
+*.pdf
+*.docx
+*.pptx
+*.mp4
+*.mov

@@ -24,9 +24,17 @@ CATEGORICAL = ["repo", "event", "author_association"]
 FEATURES = NUMERIC + BINARY + CATEGORICAL
 
 
+DATASET = Path("data/dataset/ci_runs.csv")
+
+
 def load_raw(raw_dir="data/raw"):
     files = sorted(p for p in Path(raw_dir).glob("*.csv") if p.name != "runs.csv")
-    df = pd.concat([pd.read_csv(p) for p in files], ignore_index=True)
+    if files:
+        df = pd.concat([pd.read_csv(p) for p in files], ignore_index=True)
+    elif DATASET.exists():
+        df = pd.read_csv(DATASET)
+    else:
+        raise FileNotFoundError("No data found. Run `python -m src.collect` or restore data/dataset/ci_runs.csv")
     return df.drop_duplicates("run_id")
 
 

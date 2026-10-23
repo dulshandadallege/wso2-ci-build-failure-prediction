@@ -1,0 +1,11 @@
+.env
+.env.*
+.git
+.github
+data/
+tests/
+notebooks/
+*.ipynb
+**/__pycache__
+.venv
+.DS_Store

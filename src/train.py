@@ -1,3 +1,4 @@
+import argparse
 import json
 import warnings
 from pathlib import Path
@@ -13,8 +14,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (average_precision_score, f1_score, precision_score,
-                             recall_score, roc_auc_score)
+from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -78,7 +78,12 @@ def best_threshold(y, p):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--n-iter", type=int, help="override search iterations (faster CI runs)")
+    args = ap.parse_args()
     params = yaml.safe_load(Path("params.yaml").read_text())["train"]
+    if args.n_iter:
+        params["n_iter"] = args.n_iter
     seed = params["seed"]
     df = build_dataset()
     train, val, test = time_split(df, params["train_size"], params["val_size"])
