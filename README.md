@@ -27,6 +27,8 @@ Time-ordered split: train on the oldest 70% of runs, validate on the next 15%, t
 | **LightGBM (selected)** | **0.70** | **0.51** | **0.53** | **0.68** |
 | XGBoost | 0.69 | 0.48 | 0.51 | 0.58 |
 
+**Why LightGBM:** it had the highest validation PR-AUC, the rule fixed before the test set was used, and stayed best on the unseen test period. The random forest catches more failures (recall 0.90), but 61% of its alerts are false; XGBoost is a close second but misses 42% of failures. LightGBM gives the best balance and is explained exactly by SHAP.
+
 The strongest drivers, from SHAP, are whether the previous run on the same PR failed, the author's past failure rate and experience, the repository, and the size of the change.
 
 ## Data
