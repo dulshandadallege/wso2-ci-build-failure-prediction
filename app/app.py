@@ -1,5 +1,7 @@
 import json
+import os
 import sys
+import urllib.request
 from pathlib import Path
 
 import joblib
@@ -108,8 +110,23 @@ ICON = f"""
 </svg>"""
 
 
+RELEASE_URL = os.environ.get(
+    "MODEL_RELEASE_URL",
+    "https://github.com/dulshandadallege/wso2-ci-build-failure-prediction/releases/latest/download",
+)
+
+
+def fetch_artifacts():
+    targets = {"model.joblib": ROOT / "models" / "model.joblib", "metrics.json": ROOT / "reports" / "metrics.json"}
+    for name, path in targets.items():
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(f"{RELEASE_URL}/{name}", path)
+
+
 @st.cache_resource
 def load():
+    fetch_artifacts()
     bundle = joblib.load(ROOT / "models" / "model.joblib")
     model = bundle["model"].named_steps["model"]
     explainer = shap.TreeExplainer(model) if hasattr(model, "feature_importances_") else None

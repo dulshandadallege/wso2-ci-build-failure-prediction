@@ -54,18 +54,32 @@ To collect fresh data, add a read-only token to `.env` (see `.env.example`) and 
 ## Docker
 
 ```bash
+docker run -p 8501:8501 ghcr.io/dulshandadallege/wso2-ci-build-failure-prediction:latest
+```
+
+Or build it locally after training:
+
+```bash
 python -m src.train
 docker build -t ci-failure-app .
 docker run -p 8501:8501 ci-failure-app
 ```
 
-## CI
+## MLOps pipeline
 
-`.github/workflows/ci.yml` runs on every push and pull request:
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | every push and pull request | ruff lint, 15 unit tests and the model quality gate; retrains the model and fails if test ROC-AUC drops below 0.62 or PR-AUC isn't at least 1.3× the baseline; builds the Docker image and checks the app's health endpoint |
+| `release.yml` | version tag `v*` | tests, full retraining and quality gate, SHAP figures, a GitHub Release holding the model and its metrics, and a container image pushed to GitHub Container Registry |
 
-1. lint with ruff, run the unit tests and the model quality gate,
-2. retrain the model, fail if test ROC-AUC drops below 0.62 or PR-AUC isn't at least 1.3× the baseline,
-3. build the Docker image and check that the app's health endpoint responds.
+The Streamlit app downloads `model.joblib` and `metrics.json` from the latest release on first start, so the deployed app always serves the most recent model that passed the gate. Set `MODEL_RELEASE_URL` to point it at another release.
+
+To publish a new model version:
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
 
 ## Limitations
 
